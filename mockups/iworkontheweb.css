@@ -120,6 +120,6 @@ h1 a:hover {
 .skip-to-navigation a:visited, .view-all a:visited, .most-recent a:visited {
   color: #000;
 }
-.skip-to-navigation a:hover {
+.skip-to-navigation a:hover, .view-all a:hover, .most-recent a:hover {
   color: #fff;
 }
