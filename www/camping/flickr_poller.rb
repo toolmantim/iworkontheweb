@@ -5,7 +5,7 @@ Iworkontheweb.establish_db_connection
 require 'rexml/document'
 require 'open-uri'
 
-class FlickrFetcher
+class Iworkontheweb::FlickrFetcher
   API_KEY = "11f5a2f3ae888c99f2da5a8c70411584"
   LIMIT = 500
 
@@ -48,4 +48,4 @@ class FlickrFetcher
     end
 end
 
-puts FlickrFetcher.new.poll!.inspect
+puts Iworkontheweb::FlickrFetcher.new.poll!.inspect
