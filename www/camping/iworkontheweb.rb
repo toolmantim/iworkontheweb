@@ -35,30 +35,49 @@ module Iworkontheweb::Models
       drop_table :people
     end
   end
+  class AddHeightAndWidthToPeople < V 2.0
+    def self.up
+      add_column :iworkontheweb_people, :height, :integer
+      add_column :iworkontheweb_people, :width,  :integer
+    end
+    def self.down
+      remove_column :iworkontheweb_people, :height, :integer
+      remove_column :iworkontheweb_people, :width,  :integer
+    end
+  end
 end
 
 module Iworkontheweb::Controllers
   class Home < R '/'
     def get
+      @body_class = "home"
+      @person_count = Person.count
       @latest = Person.latest
       @person = @latest.last
       render :home
     end
   end
-  class Show < R '/people/(\d+)-[a-z-]*'
+  class Show < R '/profiles/(\d+)-[a-z-]*'
     def get(id)
+      @body_class = "show-profile"
+      @person_count = Person.count
       @latest = Person.latest
       @profile = Person.find(id)
+      @page_title = @profile.name
       render :show
     rescue ActiveRecord::RecordNotFound
       @headers["Status"] = "404 Not Found"
+      @page_title = "Page not found."
       render :not_found
     end
   end
-  class Index < R '/people'
+  class Index < R '/profiles'
     def get
+      @body_class = "archive"
+      @person_count = Person.count
       @latest = Person.latest
       @people = Person.all
+      @page_title = %(All #{@person_count} "I work on the web" profiles)
       render :index
     end
   end
@@ -71,7 +90,6 @@ module Iworkontheweb::Controllers
       end
     end
   end
-
   class Style < R '/iworkontheweb.css'
     def get
       @headers["Content-Type"] = "text/css; charset=utf-8"
@@ -211,10 +229,10 @@ module Iworkontheweb::Views
   def layout
     html do
       head do
-        title 'I work on the web.'
+        title(@page_title || "I work on the web.")
         link :rel => 'stylesheet', :type => 'text/css', :href => '/iworkontheweb.css', :media => 'screen'
       end
-      body do
+      body(:class => @body_class) do
         h1.header { a 'I work on the web.', :href => R(Home) }
         div.content do
           self << yield
@@ -224,7 +242,7 @@ module Iworkontheweb::Views
   end
 
   def home
-    p 'Hello'
+    _person(@latest_person)
   end
 
   def index
@@ -240,22 +258,16 @@ module Iworkontheweb::Views
 
 
   def show
+    
   end
   
   def not_found
-    p do
-      "No person found. Check out " +
-       a("all [x] people", :href => R(Index))
-    end
+    p { "Page not found. Check out " + a("all #{@person_count} people", :href => R(Index)) }
   end
 
   # partials
   def _person(person)
-    h1 post.title
-    p post.body
-    p do
-      [a("Edit", :href => R(Edit, post)), a("View", :href => R(View, post))].join " | "
-    end
+    
   end
 end
 
