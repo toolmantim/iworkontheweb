@@ -18,5 +18,7 @@ Merb::Router.prepare do |r|
   r.default_routes
   
   # change this for your home page to be avaiable at /
-  #r.add '/', :controller => 'whatever', :action =>'index'
+  r.add '/', :controller => 'profiles', :action =>'home'
+  r.add '/people', :controller => 'profiles', :action =>'index'
+  r.add '/people/:id', :controller => 'profiles', :action =>'show'
 end
