@@ -50,6 +50,9 @@ module Iworkontheweb::Controllers
       @latest = Person.latest
       @profile = Person.find(id)
       render :show
+    rescue ActiveRecord::RecordNotFound
+      @headers["Status"] = "404 Not Found"
+      render :not_found
     end
   end
   class Index < R '/people'
@@ -212,7 +215,7 @@ module Iworkontheweb::Views
         link :rel => 'stylesheet', :type => 'text/css', :href => '/iworkontheweb.css', :media => 'screen'
       end
       body do
-        h1.header { a 'I work on the web.', :href => R(Index) }
+        h1.header { a 'I work on the web.', :href => R(Home) }
         div.content do
           self << yield
         end
@@ -237,6 +240,13 @@ module Iworkontheweb::Views
 
 
   def show
+  end
+  
+  def not_found
+    p do
+      "No person found. Check out " +
+       a("all [x] people", :href => R(Index))
+    end
   end
 
   # partials
