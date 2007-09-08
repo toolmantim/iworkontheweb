@@ -1,0 +1,21 @@
+#!/usr/bin/env ruby
+require 'rubygems'
+require 'merb'
+
+TMPL = <<EOF
+class <%= class_name.snake_case.camel_case %> < ActiveRecord::Migration
+  def self.up
+  end
+
+  def self.down
+  end
+end
+EOF
+
+class_name = ARGV[0]
+highest_migration = Dir[Dir.pwd+'/dist/schema/migrations/*'].map{|f| File.basename(f) =~ /^(\d+)/; $1}.max
+filename = format("%03d_%s", (highest_migration.to_i+1), class_name.snake_case)
+
+File.open(Dir.pwd+"/dist/schema/migrations/#{filename}.rb", 'w+') do |file|
+  file.write Erubis::Eruby.new(TMPL).result(binding)
+end

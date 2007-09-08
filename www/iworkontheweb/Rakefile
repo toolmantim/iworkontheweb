@@ -1,0 +1,68 @@
+require 'rake'
+require 'rake/rdoctask'
+require 'rake/testtask'
+require 'fileutils'
+require 'rubygems'
+if File.directory?( File.join(File.dirname(__FILE__), "dist/framework"))
+  require File.join(File.dirname(__FILE__), "dist/framework/merb")
+else  
+  require 'merb'
+end
+require MERB_FRAMEWORK_ROOT+'/merb_tasks'
+MERB_ROOT = File.dirname(__FILE__)
+include FileUtils
+
+
+#desc "Packages up Merb."
+#task :default => [:package]
+
+desc "load merb_init.rb"
+task :merb_init do
+  require 'merb'
+  require File.dirname(__FILE__)+'/dist/conf/merb_init.rb'
+end  
+
+desc "Load db schema"
+task :load_schema => [:merb_init] do
+  require File.dirname(__FILE__)+'/dist/schema/schema.rb'
+end
+
+task :uninstall => [:clean] do
+  sh %{sudo gem uninstall #{NAME}}
+end
+
+desc 'Run unit tests'
+Rake::TestTask.new('test_unit') do |t|
+  t.libs << 'test'
+  t.pattern = 'test/unit/*_test.rb'
+  t.verbose = true
+end
+
+desc 'Run functional tests'
+Rake::TestTask.new('test_functional') do |t|
+  t.libs << 'test'
+  t.pattern = 'test/functional/*_test.rb'
+  t.verbose = true
+end
+
+desc 'Run all tests'
+Rake::TestTask.new('test') do |t|
+  t.libs << 'test'
+  t.pattern = 'test/**/*_test.rb'
+  t.verbose = true
+end
+
+desc 'Run all tests, specs and finish with rcov'
+task :aok do
+  sh %{rake rcov}
+  sh %{rake spec}
+end
+
+##############################################################################
+# SVN
+##############################################################################
+
+desc "Add new files to subversion"
+task :svn_add do
+   system "svn status | grep '^\?' | sed -e 's/? *//' | sed -e 's/ /\ /g' | xargs svn add"
+end
