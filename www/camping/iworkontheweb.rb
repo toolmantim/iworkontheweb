@@ -81,6 +81,14 @@ module Iworkontheweb::Models
       remove_column :iworkontheweb_people, :image_source_url, :text
     end
   end
+  class AddFlickrPhotoId < V 5.0
+    def self.up
+      add_column :iworkontheweb_people, :flickr_photo_id, :string
+    end
+    def self.down
+      remove_column :iworkontheweb_people, :flickr_photo_id, :string
+    end    
+  end
 end
 
 module Iworkontheweb::Controllers

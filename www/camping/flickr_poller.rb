@@ -28,16 +28,19 @@ class Iworkontheweb::FlickrFetcher
   class Size < Struct.new(:label, :width, :height, :source, :url)
   end
 
-  def poll!
-    mapped_iwotw_tagged_photos
+  def update!
+    existing_photos = Iworkontheweb::Models::Person.find(:all)
+    puts "#{existing_photos.length} existing Persons"
+    all_photos = iwotw_tagged_photos
+    puts "#{all_photos.length} total tagged photos"
   end
 
   protected
-    def get_iwotw_tagged_photos
+    def fetch_iwotw_tagged_photos
       REXML::Document.new open("http://api.flickr.com/services/rest/?method=flickr.photos.search&api_key=#{API_KEY}&extras=date_upload,date_taken,machine_tags&per_page=#{LIMIT}&machine_tags=iworkontheweb:name=&sort=date-posted-asc")
     end
-    def mapped_iwotw_tagged_photos
-      get_iwotw_tagged_photos.get_elements("//photo").map do |e|
+    def iwotw_tagged_photos
+      fetch_iwotw_tagged_photos.get_elements("//photo").map do |e|
         photo = Photo.new(*%w(id title secret server dateupload datetaken).map {|a| e.attributes[a]})
         photo.machine_tags = e.attributes["machine_tags"].split(" ").inject({}) do |hash,tag|
           hash[tag.split("=")[0]] = tag.split("=")[1]
@@ -48,4 +51,4 @@ class Iworkontheweb::FlickrFetcher
     end
 end
 
-puts Iworkontheweb::FlickrFetcher.new.poll!.inspect
+Iworkontheweb::FlickrFetcher.new.update!
