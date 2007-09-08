@@ -10,6 +10,19 @@ Camping.goes :Iworkontheweb
 
 module Iworkontheweb
   include Camping::Session
+  
+  # Method for other scripts to create a database connection. For example:
+  #
+  #   require 'iworkontheweb'
+  #   Iworkontheweb.establish_db_connection
+  #   puts Iworkontheweb::Models::Person.count
+  def self.establish_db_connection
+    require 'erb'
+    ENV["CAMPING_ENV"] ||= "development"
+    database_config = YAML.load(ERB.new(File.read("database.yml")).result(binding))
+    puts database_config
+    Iworkontheweb::Models::Base.establish_connection database_config[ENV["CAMPING_ENV"]]
+  end
 end
 
 module Iworkontheweb::Models
