@@ -15,13 +15,13 @@ end
 module Iworkontheweb::Models
   class Person < Base
     def self.latest
-      find(:all, :order => 'created_at DESC', :limit => 15)
+      find(:all, :order => 'created_at DESC', :limit => 10)
     end
     def self.all
       find(:all, :order => 'created_at ASC')
     end
     def to_param
-      "#{self.id}-#{self.name.downcase.gsub(' ','-').gsub(/[^a-z0-9]/,'')}"
+      "#{self.id}-#{self.name.downcase.gsub(' ','-').gsub(/[^a-z0-9-]/,'')}"
     end
   end
   class CreateInitialTables < V 1.0
@@ -76,7 +76,7 @@ module Iworkontheweb::Controllers
       @body_class = "home"
       @person_count = Person.count
       @latest = Person.latest
-      @person = @latest.last
+      @person = @latest.first
       render :home
     end
   end
@@ -85,8 +85,8 @@ module Iworkontheweb::Controllers
       @body_class = "show-profile"
       @person_count = Person.count
       @latest = Person.latest
-      @profile = Person.find(id)
-      @page_title = @profile.name
+      @person = Person.find(id)
+      @page_title = "#{@person.name} - I work on the web."
       render :show
     rescue ActiveRecord::RecordNotFound
       @headers["Status"] = "404 Not Found"
@@ -100,7 +100,7 @@ module Iworkontheweb::Controllers
       @person_count = Person.count
       @latest = Person.latest
       @people = Person.all
-      @page_title = %(All #{@person_count} "I work on the web" profiles)
+      @page_title = %(All #{@person_count} I work on the web profiles)
       render :index
     end
   end
@@ -145,45 +145,14 @@ module Iworkontheweb::Controllers
         .content-nav li {
           display: inline;
           margin-right: 0.5em;
-        }
+        }        
         .skip-to-navigation {
           font-size: 12px;
         }
         .profile .skip-to-navigation {
           font-size: 14px;
         }
-
-        h1, h2, h3 {
-          font-weight: normal;
-        }
-
-        ul, li {
-          list-style: none;
-        }
-
-        h1 {
-          font-size: 48px;
-          margin: 1em 0 20px 0;
-        }
-
-        .profile h2 {
-          font-size: 24px;
-          text-align: right;
-          margin-top: 10px;
-        }
-
-        .navigation h2 {
-          font-size: 16px;
-          margin: 0;
-          text-transform: lowercase;
-          margin-bottom: 5px;
-        }
-
-        .all-profiles .profiles h2 {
-          margin: 2em 0 0.5em 10%;
-          text-align: left;
-        }
-
+        
         p {
           margin: 1em 0;
         }
@@ -200,12 +169,61 @@ module Iworkontheweb::Controllers
         a:visited {
           color: #999;
         }
+
+        h1, h2, h3 {
+          font-weight: normal;
+        }
+
+        ul, li {
+          list-style: none;
+        }
+
+        h1 {
+          font-size: 48px;
+          margin: 1em 0 20px 0;
+        }
+        
+        h1 a, h1 a:visited, h1 a:hover {
+          background-color: #fff;
+          color: #000;
+          text-decoration: none;
+        }
+        h1 a:hover {
+          text-decoration: underline;
+        }
+
+        .profile h2 {
+          font-size: 24px;
+          text-align: right;
+          margin-top: 10px;
+        }
+        
+        .profile h2 a, .profile h2 a:hover, .profile h2 a:visited {
+          text-decoration: none;
+          background-color: #fff;
+          color: #000;
+        }
+        .profile h2 a:hover {
+          text-decoration: underline;
+        }
+
+        .navigation h2 {
+          font-size: 16px;
+          margin: 0;
+          text-transform: lowercase;
+          margin-bottom: 5px;
+        }
+
+        .all-profiles .profiles h2 {
+          margin: 2em 0 0.5em 10%;
+          text-align: left;
+        }
+
         .skip-to-navigation a {
           color: #000;
         }
 
-        .home .navigation .view-all,
-        .all-profiles .navigation .where-it-all-started {
+        .navigation .view-all {
           margin-top: 10px;  
         }
 
@@ -227,19 +245,10 @@ module Iworkontheweb::Controllers
           margin: 0.75em 0;
         }
 
-        h1 a, h1 a:visited, h1 a:hover {
-          background-color: #fff;
-          color: #000;
-          text-decoration: none;
-        }
-        h1 a:hover {
-          text-decoration: underline;
-        }
-
-        .skip-to-navigation a:visited, .view-all a:visited, .most-recent a:visited {
+        .skip-to-navigation a:visited {
           color: #000;
         }
-        .skip-to-navigation a:hover, .view-all a:hover, .most-recent a:hover {
+        .skip-to-navigation a:hover {
           color: #fff;
         }
       }
@@ -263,7 +272,7 @@ module Iworkontheweb::Views
           h2 "Most recent"
           ul do
             for person in @latest
-              li { a person.name, R(Show, person.to_param)}
+              li { a person.name, :href => R(Show, person.to_param) }
             end
             _nav_links
           end
@@ -274,16 +283,22 @@ module Iworkontheweb::Views
   end
 
   def home
-    _person(@latest.last) if @latest.last
+    _person(@person) if @person
   end
 
   def index
     div.profiles do
-      p "All da profiles"
+      h2 "All #{@people.length} people:"
+      @people.in_groups_of((@people.length.to_f / 3.0).ceil).each_with_index do |group, i|
+        ul :class => "group-#{i+1}" do
+          for person in group
+            li { a person.name, :href => R(Show, person.to_param) } if person
+          end
+        end
+      end
     end
   end
-
-
+  
   def show
     _person(@person)
   end
@@ -294,18 +309,14 @@ module Iworkontheweb::Views
 
   # partials
   def _person(person)
-    div :class => 'profile', :style => "width:#{person.width}px" do
+    div :class => 'profile', :style => "width:#{person.image_width}px" do
       a :href => person.source_flickr_photo_url do
         img :src => person.image_source_url, :alt => person.name, :width => person.image_width.to_s, :height => person.image_height.to_s
       end
-      h2 person.name
+      h2 { a person.name, :href => R(Show, person.to_param) }
       div.copy do
-        person.text +
-        p { span.source { "Source: " + a(person.source_flickr_photo_url, :href => source_flickr_photo_url) } }
-      end
-      ul :content => "content-nav" do
-        li(:class => "skip-to-navigation") { a "Skip to navigation", :href => "#navigation" }
-        _nav_links
+        person.story +
+        p { span.source { "Source: " + a(person.source_flickr_photo_url, :href => person.source_flickr_photo_url) } }
       end
     end    
   end
@@ -319,4 +330,53 @@ end
 def Iworkontheweb.create
   Camping::Models::Session.create_schema
   Iworkontheweb::Models.create_schema :assume => (Iworkontheweb::Models::Person.table_exists? ? 1.0 : 0.0)
+  # Fixtures
+  unless Iworkontheweb::Models::Person.count > 0
+    story = <<STORY
+    This is me, I work on the web.<br />
+    <br />
+    I live in Sydney and work as a User Experience Consultant. I spend *a lot* of time online for work and for fun.<br />
+    <br />
+    Some of my friends work on the web and some don't. For example, I have a friend who is a full-time mum, an artist, there's a script writer, a builder, a chef, some interpreters, teachers, a marine engineer, musicians, journalists and designers, plus some other non-web IT people too.<br />
+    <br />
+    I love working on the web and I truly believe it’s an amazing source of information, education, socialisation, freedom, creativity, solace, privacy, entertainment and so much more than I could ever express, because it's important to us all in so many ways. These are just some of the reasons I spend so much time online and participate in so many web events. <br />
+    <br />
+    I love learning new things, finding out how they work and understanding what people do in detail. Being involved in so many things gives me the opportunity to do that. <br />
+    <br />
+    Despite such an extraverted post, I am actually very reserved, which is sometimes, unfortunately, misinterpreted as aloof. I relate better to people in small groups and one on one situations with people I know, but I still love the energy that we create when we all get together. I feel incredibly lucky that I've been able to make so many wonderful friends and that it's enabled me to meet so many smart, fun, silly, generous, crazy, creative people online and off.<br />
+    <br />
+    I don’t belong to a clique and challenge anyone to say that I do. I love being involved in the web community and feel so fortunate for what I've experienced and learnt by being a part of it. <br />
+    <br />
+    I think it’s important to give something back to the community we enjoy so that it continues to grow and develop in positive ways. So if you’re reserved like me or too shy to join in or come along on your own, flickr me and we can go along together….<br />
+    <br />
+    This is who I am... <a href="http://flickr.com/photos/tags/iworkontheweb/">Who are you</a>?&nbsp;
+STORY
+    Iworkontheweb::Models::Person.create(:created_at => Time.now,
+                                        :name => "Lisa Herrod",
+                                        :story => story,
+                                        :source_flickr_photo_url => "http://flickr.com/photos/lisaherrod/1273023044/",
+                                        :image_source_url => "http://farm2.static.flickr.com/1269/1273023044_cac184a2e7.jpg",
+                                        :image_width => "375",
+                                        :image_height => "500")
+    story = <<STORY
+    This is me, I work on the web<br />
+    <br />
+    I live in beautiful Sydney (but still prefer Melbourne) and work for the mainstream media in the form of News Digital Media. I'm currently responsible for all front end development on NEWS.com.au, our flagship site<br />
+    <br />
+    Aside from that, I work with friends on little projects here and there. I also do some freelance when I can squeeze it in<br />
+    <br />
+    I'm deeply into our local web community. I go to every user group meeting and conference I can get to. Railscamp, Web Directions, WSG, SXSW etc. I've even run a few events<br />
+    <br />
+    I love the web community. There is something about the web that encourages people to share and help each other. At the events I go to, people are so passionate, so excited. They really love the web. They have a vision for it. Everybody's vision differs, but they're all interesting and they're all possible<br />
+    <br />
+    I see so much potential and so much excitement in the web and that's due to the people. I want to encourage that, however I can&nbsp;
+STORY
+    Iworkontheweb::Models::Person.create(:created_at => Time.now + 5.minutes,
+                                         :name => "Lachlan Hardy",
+                                         :story => story,
+                                         :source_flickr_photo_url => "http://flickr.com/photos/lachlanhardy/1298077841/",
+                                         :image_source_url => "http://farm2.static.flickr.com/1304/1298077841_c56d713f21.jpg",
+                                         :image_width => "500",
+                                         :image_height => "375")
+  end
 end
