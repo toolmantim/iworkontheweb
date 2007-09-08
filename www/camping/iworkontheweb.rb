@@ -4,6 +4,8 @@ require 'rubygems'
 require 'camping'
 require 'camping/session'
 
+ActiveRecord::Base.logger = Logger.new(STDOUT)
+
 Camping.goes :Iworkontheweb
 
 module Iworkontheweb
@@ -17,6 +19,9 @@ module Iworkontheweb::Models
     end
     def self.all
       find(:all, :order => 'created_at ASC')
+    end
+    def to_param
+      "#{self.id}-#{self.name.downcase.gsub(' ','-').gsub(/[^a-z0-9]/,'')}"
     end
   end
   class CreateInitialTables < V 1.0
@@ -45,6 +50,24 @@ module Iworkontheweb::Models
       remove_column :iworkontheweb_people, :width,  :integer
     end
   end
+  class RenameHeightAndWidthToImageHeightAndWidth < V 3.0
+    def self.up
+      rename_column :iworkontheweb_people, :height, :image_height
+      rename_column :iworkontheweb_people, :width, :image_width
+    end
+    def self.down
+      rename_column :iworkontheweb_people, :image_height, :height
+      rename_column :iworkontheweb_people, :image_width, :width
+    end
+  end
+  class AddImageSource < V 4.0
+    def self.up
+      add_column :iworkontheweb_people, :image_source_url, :text
+    end
+    def self.down
+      remove_column :iworkontheweb_people, :image_source_url, :text
+    end
+  end
 end
 
 module Iworkontheweb::Controllers
@@ -57,7 +80,7 @@ module Iworkontheweb::Controllers
       render :home
     end
   end
-  class Show < R '/profiles/(\d+)-[a-z-]*'
+  class Show < R '/profiles/(\d+)', '/profiles/(\d+)-[a-z-]*'
     def get(id)
       @body_class = "show-profile"
       @person_count = Person.count
@@ -73,7 +96,7 @@ module Iworkontheweb::Controllers
   end
   class Index < R '/profiles'
     def get
-      @body_class = "archive"
+      @body_class = "all-profiles"
       @person_count = Person.count
       @latest = Person.latest
       @people = Person.all
@@ -186,7 +209,7 @@ module Iworkontheweb::Controllers
           margin-top: 10px;  
         }
 
-        .all-profiles .profiles {
+        .page, .all-profiles .profiles {
           width: 550px;
           float: right;
         }
@@ -233,41 +256,63 @@ module Iworkontheweb::Views
         link :rel => 'stylesheet', :type => 'text/css', :href => '/iworkontheweb.css', :media => 'screen'
       end
       body(:class => @body_class) do
+        p(:class => "skip-to-navigation") { a "Skip to navigation", :href => "#navigation" }
         h1.header { a 'I work on the web.', :href => R(Home) }
-        div.content do
-          self << yield
+        self << yield
+        div :id => "navigation", :class => "navigation" do
+          h2 "Most recent"
+          ul do
+            for person in @latest
+              li { a person.name, R(Show, person.to_param)}
+            end
+            _nav_links
+          end
         end
+        div(:class => "clear-both") { "" }
       end
     end
   end
 
   def home
-    _person(@latest_person)
+    _person(@latest.last) if @latest.last
   end
 
   def index
-    # if @posts.empty?
-    #   p 'No posts found.'
-    #   p { a 'Add', :href => R(Add) }
-    # else
-    #   for post in @posts
-    #     _post(post)
-    #   end
-    # end
+    div.profiles do
+      p "All da profiles"
+    end
   end
 
 
   def show
-    
+    _person(@person)
   end
   
   def not_found
-    p { "Page not found. Check out " + a("all #{@person_count} people", :href => R(Index)) }
+    div.page { p "Page not found." }
   end
 
   # partials
   def _person(person)
-    
+    div :class => 'profile', :style => "width:#{person.width}px" do
+      a :href => person.source_flickr_photo_url do
+        img :src => person.image_source_url, :alt => person.name, :width => person.image_width.to_s, :height => person.image_height.to_s
+      end
+      h2 person.name
+      div.copy do
+        person.text +
+        p { span.source { "Source: " + a(person.source_flickr_photo_url, :href => source_flickr_photo_url) } }
+      end
+      ul :content => "content-nav" do
+        li(:class => "skip-to-navigation") { a "Skip to navigation", :href => "#navigation" }
+        _nav_links
+      end
+    end    
+  end
+
+  def _nav_links
+    li(:class => "view-all") { a "View all #{@person_count} people", :href => R(Index) }
+    li(:class => "where-it-all-started") { a "Where it all started", :href => R(Show, "1-lisa-herrod") }
   end
 end
 
