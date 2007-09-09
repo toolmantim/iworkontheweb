@@ -316,7 +316,7 @@ end
 module Iworkontheweb::Views
 
   def layout
-    xhtml_transitional do
+    xhtml_strict do
       head do
         title(@page_title || "I work on the web.")
         link :rel => 'stylesheet', :type => 'text/css', :href => '/iworkontheweb.css', :media => 'screen'
@@ -335,6 +335,15 @@ module Iworkontheweb::Views
           end
         end
         div(:class => "clear-both") { "" }
+        
+        # Reinvigorate
+        script(:type => "text/javascript", :src => "http://include.reinvigorate.net/re_.js") { "" }
+        script(:type => "text/javascript") { "re_(\"dyf1j-xl76p89197\");" }
+        
+        # Google Analytics
+        script(:type => "text/javascript", :src => "http://www.google-analytics.com/urchin.js") { "" }
+        script(:type => "text/javascript") { "_uacct = \"UA-196032-2\"; urchinTracker();" }
+        
       end
     end
   end
