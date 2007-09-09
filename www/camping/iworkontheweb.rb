@@ -413,12 +413,12 @@ def Iworkontheweb.create_fixtures
   This is who I am... <a href="http://flickr.com/photos/tags/iworkontheweb/">Who are you</a>?&nbsp;
 STORY
   Iworkontheweb::Models::Person.create(:created_at => Time.now,
-                                      :name => "Lisa Herrod",
-                                      :story => story,
-                                      :source_flickr_photo_url => "http://flickr.com/photos/lisaherrod/1273023044/",
-                                      :image_source_url => "http://farm2.static.flickr.com/1269/1273023044_cac184a2e7.jpg",
-                                      :image_width => "375",
-                                      :image_height => "500")
+                                       :name => "Lisa Herrod",
+                                       :story => story,
+                                       :source_flickr_photo_url => "http://flickr.com/photos/lisaherrod/1273023044/",
+                                       :image_source_url => "http://farm2.static.flickr.com/1269/1273023044_cac184a2e7.jpg",
+                                       :image_width => "375",
+                                       :image_height => "500")
   story = <<STORY
   This is me, I work on the web<br />
   <br />
