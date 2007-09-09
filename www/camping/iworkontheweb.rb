@@ -41,13 +41,13 @@ module Iworkontheweb::Models
     def to_param
       "#{self.id}-#{self.name.downcase.gsub(' ','-').gsub(/[^a-z0-9-]/,'')}"
     end
-    def story=(raw_text)
-      super '<p>' +
-              raw_text.to_s.
-              gsub(/\r\n?/, "\n").                     # \r\n and \r -> \n
-              gsub(/\n\n+/, "</p>\n\n<p>").            # 2+ newline  -> paragraph
-              gsub(/([^\n]\n)(?=[^\n])/, '\1<br />') + # 1 newline   -> br
-            '</p>'
+    def formatted_story
+      '<p>' +
+        story.to_s.
+        gsub(/\r\n?/, "\n").                     # \r\n and \r -> \n
+        gsub(/\n\n+/, "</p>\n\n<p>").            # 2+ newline  -> paragraph
+        gsub(/([^\n]\n)(?=[^\n])/, '\1<br />') + # 1 newline   -> br
+      '</p>'
     end
     def update_attributes_if_changed!(new_attributes)
       if attributes.merge(new_attributes) != attributes
@@ -372,7 +372,7 @@ module Iworkontheweb::Views
       end
       h2 { a person.name, :href => R(Show, person.to_param) }
       div.copy do
-        person.story +
+        person.formatted_story +
         p { span.source { "Source: " + a(person.source_flickr_photo_url, :href => person.source_flickr_photo_url) } }
       end
     end    

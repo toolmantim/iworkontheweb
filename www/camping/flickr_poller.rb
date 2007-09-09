@@ -44,13 +44,13 @@ class Iworkontheweb::Flickr
     
     def to_person_attributes
       {
-        :name => name_tag.value,
-        :story => description,
-        :source_flickr_photo_url => photo_page_url,
-        :image_source_url => medium_size.source,
-        :image_width => medium_size.width,
-        :image_height => medium_size.height,
-        :flickr_photo_id => id
+        "name" => name_tag.value,
+        "story" => description,
+        "source_flickr_photo_url" => photo_page_url,
+        "image_source_url" => medium_size.source,
+        "image_width" => medium_size.width.to_i,
+        "image_height" => medium_size.height.to_i,
+        "flickr_photo_id" => id
       }
     end
 
