@@ -111,4 +111,6 @@ class Iworkontheweb::Flickr
   end
 end
 
-Iworkontheweb::Flickr.update!
+if $0 == __FILE__
+  Iworkontheweb::Flickr.update!
+end

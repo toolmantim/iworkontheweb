@@ -9,8 +9,6 @@ Camping.goes :Iworkontheweb
 IWOTW_LOGGER = ActiveRecord::Base.logger = Logger.new(STDOUT)
 
 module Iworkontheweb
-  LOGGER = 
-  
   include Camping::Session
   
   # Method for other scripts to create a database connection. For example:
