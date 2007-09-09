@@ -75,38 +75,38 @@ class Iworkontheweb::Flickr
 
   def self.update!
     people = Iworkontheweb::Models::Person.find(:all, :select => 'id, flickr_photo_id')
-    puts "#{people.length} existing people in the DB"
+    IWOTW_LOGGER.info "#{people.length} existing people in the DB"
     
     flickr_photos = Photo.iwotw_name_tagged_photos
-    puts "#{flickr_photos.length} tagged Flickr Photos"
+    IWOTW_LOGGER.info "#{flickr_photos.length} tagged Flickr Photos"
     
     deleted_people = people.find_all {|person| !flickr_photos.any? {|photo| photo.id == person.flickr_photo_id }}
-    puts "#{deleted_people.length} people no longer on Flickr"
+    IWOTW_LOGGER.info "#{deleted_people.length} people no longer on Flickr"
     delete_people_no_longer_with_photos(deleted_people) unless deleted_people.empty?
     
     existing_photos = flickr_photos.find_all {|photo| people.any? {|person| person.flickr_photo_id == photo.id }}
-    puts "#{existing_photos.length} photos on Flickr already in DB"    
+    IWOTW_LOGGER.info "#{existing_photos.length} photos on Flickr already in DB"    
     update_people_from_flickr_photos(existing_photos) unless existing_photos.empty?
 
     new_photos = flickr_photos.find_all {|photo| !people.any? {|person| person.flickr_photo_id == photo.id}}
-    puts "#{new_photos.length} new photos on Flickr"
+    IWOTW_LOGGER.info "#{new_photos.length} new photos on Flickr"
     add_people_from_flickr_photos(new_photos) unless new_photos.empty?
   end
   
   def self.update_people_from_flickr_photos(flickr_photos)
-    puts "Updating #{flickr_photos.length} existing people"
+    IWOTW_LOGGER.debug "Updating #{flickr_photos.length} existing people"
     flickr_photos.each do |photo|
       Iworkontheweb::Models::Person.find_by_flickr_photo_id(photo.id).update_attributes_if_changed!(photo.to_person_attributes)
     end
   end
   def self.add_people_from_flickr_photos(new_flickr_photos)
-    puts "Adding #{new_flickr_photos.length} people from new flickr photos"
+    IWOTW_LOGGER.debug "Adding #{new_flickr_photos.length} people from new flickr photos"
     new_flickr_photos.each do |photo|
       Iworkontheweb::Models::Person.new(photo.to_person_attributes).save!
     end
   end
   def self.delete_people_no_longer_with_photos(people)
-    puts "Deleting #{people.length} people no longer with flickr photos"
+    IWOTW_LOGGER.debug "Deleting #{people.length} people no longer with flickr photos"
     people.each(&:destroy)
   end
 end
