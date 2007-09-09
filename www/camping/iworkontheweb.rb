@@ -17,24 +17,42 @@ module Iworkontheweb
   #   Iworkontheweb.establish_db_connection
   #   puts Iworkontheweb::Models::Person.count
   def self.establish_db_connection
-    require 'erb'
-    ENV["CAMPING_ENV"] ||= "development"
-    database_config = YAML.load(ERB.new(File.read("database.yml")).result(binding))
-    puts database_config
-    Iworkontheweb::Models::Base.establish_connection database_config[ENV["CAMPING_ENV"]]
+    Iworkontheweb::Models::Base.establish_connection({
+      "development" => {
+        "adapter" => "sqlite3",
+        "database" => File.expand_path("~/.camping.db")
+      }
+    }[ENV["CAMPING_ENV"] || "development"])
   end
 end
 
 module Iworkontheweb::Models
+  Base.default_timezone = :utc
   class Person < Base
     def self.latest
-      find(:all, :order => 'created_at DESC', :limit => 10)
+      find(:first, :order => 'created_at DESC')
+    end
+    def self.recent
+      find(:all, :order => 'created_at DESC', :limit => 10, :select => 'id, name')
     end
     def self.all
-      find(:all, :order => 'created_at ASC')
+      find(:all, :order => 'created_at ASC', :select => 'id, name')
     end
     def to_param
       "#{self.id}-#{self.name.downcase.gsub(' ','-').gsub(/[^a-z0-9-]/,'')}"
+    end
+    def story=(raw_text)
+      super '<p>' +
+              raw_text.to_s.
+              gsub(/\r\n?/, "\n").                     # \r\n and \r -> \n
+              gsub(/\n\n+/, "</p>\n\n<p>").            # 2+ newline  -> paragraph
+              gsub(/([^\n]\n)(?=[^\n])/, '\1<br />') + # 1 newline   -> br
+            '</p>'
+    end
+    def update_attributes_if_changed!(new_attributes)
+      if attributes.merge(new_attributes) != attributes
+        update_attributes!(new_attributes)
+      end
     end
   end
   class CreateInitialTables < V 1.0
@@ -89,6 +107,16 @@ module Iworkontheweb::Models
       remove_column :iworkontheweb_people, :flickr_photo_id, :string
     end    
   end
+  class RemoveVias < V 6.0
+    def self.up
+      remove_column :iworkontheweb_people, :via_flickr_photo_url
+      remove_column :iworkontheweb_people, :via_other
+    end
+    def self.down
+      add_column :iworkontheweb_people, :via_flickr_photo_url,    :text
+      add_column :iworkontheweb_people, :via_other,               :string
+    end
+  end
 end
 
 module Iworkontheweb::Controllers
@@ -96,8 +124,8 @@ module Iworkontheweb::Controllers
     def get
       @body_class = "home"
       @person_count = Person.count
-      @latest = Person.latest
-      @person = @latest.first
+      @latest = Person.recent
+      @person = Person.latest
       render :home
     end
   end
@@ -105,7 +133,7 @@ module Iworkontheweb::Controllers
     def get(id)
       @body_class = "show-profile"
       @person_count = Person.count
-      @latest = Person.latest
+      @latest = Person.recent
       @person = Person.find(id)
       @page_title = "#{@person.name} - I work on the web."
       render :show
@@ -119,7 +147,7 @@ module Iworkontheweb::Controllers
     def get
       @body_class = "all-profiles"
       @person_count = Person.count
-      @latest = Person.latest
+      @latest = Person.recent
       @people = Person.all
       @page_title = %(All #{@person_count} I work on the web profiles)
       render :index
@@ -179,7 +207,7 @@ module Iworkontheweb::Controllers
         }
 
         a {
-          color: #000;
+          color: #333;
         }
 
         a:hover {
@@ -188,7 +216,7 @@ module Iworkontheweb::Controllers
           color: #fff;
         }
         a:visited {
-          color: #999;
+          color: #666;
         }
 
         h1, h2, h3 {
@@ -216,7 +244,7 @@ module Iworkontheweb::Controllers
         .profile h2 {
           font-size: 24px;
           text-align: right;
-          margin-top: 10px;
+          margin-top: 15px;
         }
         
         .profile h2 a, .profile h2 a:hover, .profile h2 a:visited {
@@ -226,6 +254,14 @@ module Iworkontheweb::Controllers
         }
         .profile h2 a:hover {
           text-decoration: underline;
+        }
+        
+        .profile .copy {
+          margin-top: 15px;
+        }
+        
+        .profile a img {
+          border: 1px solid #000;
         }
 
         .navigation h2 {
@@ -249,7 +285,7 @@ module Iworkontheweb::Controllers
         }
 
         .page, .all-profiles .profiles {
-          width: 550px;
+          width: 500px;
           float: right;
         }
 
@@ -351,53 +387,54 @@ end
 def Iworkontheweb.create
   Camping::Models::Session.create_schema
   Iworkontheweb::Models.create_schema :assume => (Iworkontheweb::Models::Person.table_exists? ? 1.0 : 0.0)
-  # Fixtures
-  unless Iworkontheweb::Models::Person.count > 0
-    story = <<STORY
-    This is me, I work on the web.<br />
-    <br />
-    I live in Sydney and work as a User Experience Consultant. I spend *a lot* of time online for work and for fun.<br />
-    <br />
-    Some of my friends work on the web and some don't. For example, I have a friend who is a full-time mum, an artist, there's a script writer, a builder, a chef, some interpreters, teachers, a marine engineer, musicians, journalists and designers, plus some other non-web IT people too.<br />
-    <br />
-    I love working on the web and I truly believe it’s an amazing source of information, education, socialisation, freedom, creativity, solace, privacy, entertainment and so much more than I could ever express, because it's important to us all in so many ways. These are just some of the reasons I spend so much time online and participate in so many web events. <br />
-    <br />
-    I love learning new things, finding out how they work and understanding what people do in detail. Being involved in so many things gives me the opportunity to do that. <br />
-    <br />
-    Despite such an extraverted post, I am actually very reserved, which is sometimes, unfortunately, misinterpreted as aloof. I relate better to people in small groups and one on one situations with people I know, but I still love the energy that we create when we all get together. I feel incredibly lucky that I've been able to make so many wonderful friends and that it's enabled me to meet so many smart, fun, silly, generous, crazy, creative people online and off.<br />
-    <br />
-    I don’t belong to a clique and challenge anyone to say that I do. I love being involved in the web community and feel so fortunate for what I've experienced and learnt by being a part of it. <br />
-    <br />
-    I think it’s important to give something back to the community we enjoy so that it continues to grow and develop in positive ways. So if you’re reserved like me or too shy to join in or come along on your own, flickr me and we can go along together….<br />
-    <br />
-    This is who I am... <a href="http://flickr.com/photos/tags/iworkontheweb/">Who are you</a>?&nbsp;
+  Iworkontheweb.create_fixtures unless Iworkontheweb::Models::Person.count > 0
+end
+
+def Iworkontheweb.create_fixtures
+  story = <<STORY
+  This is me, I work on the web.<br />
+  <br />
+  I live in Sydney and work as a User Experience Consultant. I spend *a lot* of time online for work and for fun.<br />
+  <br />
+  Some of my friends work on the web and some don't. For example, I have a friend who is a full-time mum, an artist, there's a script writer, a builder, a chef, some interpreters, teachers, a marine engineer, musicians, journalists and designers, plus some other non-web IT people too.<br />
+  <br />
+  I love working on the web and I truly believe it’s an amazing source of information, education, socialisation, freedom, creativity, solace, privacy, entertainment and so much more than I could ever express, because it's important to us all in so many ways. These are just some of the reasons I spend so much time online and participate in so many web events. <br />
+  <br />
+  I love learning new things, finding out how they work and understanding what people do in detail. Being involved in so many things gives me the opportunity to do that. <br />
+  <br />
+  Despite such an extraverted post, I am actually very reserved, which is sometimes, unfortunately, misinterpreted as aloof. I relate better to people in small groups and one on one situations with people I know, but I still love the energy that we create when we all get together. I feel incredibly lucky that I've been able to make so many wonderful friends and that it's enabled me to meet so many smart, fun, silly, generous, crazy, creative people online and off.<br />
+  <br />
+  I don’t belong to a clique and challenge anyone to say that I do. I love being involved in the web community and feel so fortunate for what I've experienced and learnt by being a part of it. <br />
+  <br />
+  I think it’s important to give something back to the community we enjoy so that it continues to grow and develop in positive ways. So if you’re reserved like me or too shy to join in or come along on your own, flickr me and we can go along together….<br />
+  <br />
+  This is who I am... <a href="http://flickr.com/photos/tags/iworkontheweb/">Who are you</a>?&nbsp;
 STORY
-    Iworkontheweb::Models::Person.create(:created_at => Time.now,
-                                        :name => "Lisa Herrod",
-                                        :story => story,
-                                        :source_flickr_photo_url => "http://flickr.com/photos/lisaherrod/1273023044/",
-                                        :image_source_url => "http://farm2.static.flickr.com/1269/1273023044_cac184a2e7.jpg",
-                                        :image_width => "375",
-                                        :image_height => "500")
-    story = <<STORY
-    This is me, I work on the web<br />
-    <br />
-    I live in beautiful Sydney (but still prefer Melbourne) and work for the mainstream media in the form of News Digital Media. I'm currently responsible for all front end development on NEWS.com.au, our flagship site<br />
-    <br />
-    Aside from that, I work with friends on little projects here and there. I also do some freelance when I can squeeze it in<br />
-    <br />
-    I'm deeply into our local web community. I go to every user group meeting and conference I can get to. Railscamp, Web Directions, WSG, SXSW etc. I've even run a few events<br />
-    <br />
-    I love the web community. There is something about the web that encourages people to share and help each other. At the events I go to, people are so passionate, so excited. They really love the web. They have a vision for it. Everybody's vision differs, but they're all interesting and they're all possible<br />
-    <br />
-    I see so much potential and so much excitement in the web and that's due to the people. I want to encourage that, however I can&nbsp;
+  Iworkontheweb::Models::Person.create(:created_at => Time.now,
+                                      :name => "Lisa Herrod",
+                                      :story => story,
+                                      :source_flickr_photo_url => "http://flickr.com/photos/lisaherrod/1273023044/",
+                                      :image_source_url => "http://farm2.static.flickr.com/1269/1273023044_cac184a2e7.jpg",
+                                      :image_width => "375",
+                                      :image_height => "500")
+  story = <<STORY
+  This is me, I work on the web<br />
+  <br />
+  I live in beautiful Sydney (but still prefer Melbourne) and work for the mainstream media in the form of News Digital Media. I'm currently responsible for all front end development on NEWS.com.au, our flagship site<br />
+  <br />
+  Aside from that, I work with friends on little projects here and there. I also do some freelance when I can squeeze it in<br />
+  <br />
+  I'm deeply into our local web community. I go to every user group meeting and conference I can get to. Railscamp, Web Directions, WSG, SXSW etc. I've even run a few events<br />
+  <br />
+  I love the web community. There is something about the web that encourages people to share and help each other. At the events I go to, people are so passionate, so excited. They really love the web. They have a vision for it. Everybody's vision differs, but they're all interesting and they're all possible<br />
+  <br />
+  I see so much potential and so much excitement in the web and that's due to the people. I want to encourage that, however I can&nbsp;
 STORY
-    Iworkontheweb::Models::Person.create(:created_at => Time.now + 5.minutes,
-                                         :name => "Lachlan Hardy",
-                                         :story => story,
-                                         :source_flickr_photo_url => "http://flickr.com/photos/lachlanhardy/1298077841/",
-                                         :image_source_url => "http://farm2.static.flickr.com/1304/1298077841_c56d713f21.jpg",
-                                         :image_width => "500",
-                                         :image_height => "375")
-  end
+  Iworkontheweb::Models::Person.create(:created_at => Time.now + 5.minutes,
+                                       :name => "Lachlan Hardy",
+                                       :story => story,
+                                       :source_flickr_photo_url => "http://flickr.com/photos/lachlanhardy/1298077841/",
+                                       :image_source_url => "http://farm2.static.flickr.com/1304/1298077841_c56d713f21.jpg",
+                                       :image_width => "500",
+                                       :image_height => "375")
 end
