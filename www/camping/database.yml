@@ -1,3 +1,0 @@
-development:
-  adapter: sqlite3
-  database: <%= File.expand_path("~/.camping.db") %>
