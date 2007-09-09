@@ -318,7 +318,7 @@ end
 module Iworkontheweb::Views
 
   def layout
-    html do
+    xhtml_transitional do
       head do
         title(@page_title || "I work on the web.")
         link :rel => 'stylesheet', :type => 'text/css', :href => '/iworkontheweb.css', :media => 'screen'
