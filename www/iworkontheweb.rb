@@ -270,6 +270,37 @@ module Iworkontheweb::Views
   def not_found
     div.page { p "Page not found." }
   end
+  
+  def _atom(builder)
+    builder.feed :xmlns => 'http://www.w3.org/2005/Atom' do |b|
+      b.title "I work on the web"
+      b.link  :rel => "self", :type => "application/atom+xml", :href => R(Atom)
+      b.link  :href => R(Index), :rel => "alternate", :type =>"text/html"
+      
+      b.generator :version => "1.0", :uri => R(Index)
+      
+      b.updated @people.first.created_at.xmlschema unless @people.empty?
+      @people.each do |person|
+        b.entry 'xml:base' => R(Index) do
+          b.author do
+            b.name person.name
+          end
+          b.published person.created_at.xmlschema
+          b.link :href => R(Index), :rel => "alternate", :type => "text/html"
+          b.title     "#{person.name}: I work on the web"
+          b.content do 
+            b.a :href => person.source_flickr_photo_url do
+              b.img :src => person.image_source_url, :alt => person.name, :width => person.image_width.to_s, :height => person.image_height.to_s
+            end
+            b.div do
+              person.formatted_story +
+              b.p { "Source: " + b.a(person.source_flickr_photo_url, :href => person.source_flickr_photo_url) }
+            end
+          end
+        end
+      end
+    end
+  end  
 
   # partials
   def _person(person)
