@@ -4,15 +4,13 @@
 
 require 'rubygems'
 require 'camping'
-require 'camping/session'
+require 'active_record'
 
 Camping.goes :Iworkontheweb
 
 IWOTW_LOGGER = ActiveRecord::Base.logger = Logger.new(STDOUT)
 
-module Iworkontheweb
-  include Camping::Session
-  
+module Iworkontheweb  
   # Method for other scripts to create a database connection. For example:
   #
   #   require 'iworkontheweb'
@@ -182,8 +180,9 @@ module Iworkontheweb::Controllers
       render :about      
     end
   end
-  class Atom < R '/atom.xml'
+  class Atom < R '/profiles.atom'
     def get
+      @headers["Content-Type"] = "application/atom+xml"
       @people = Person.find(:all)
       _atom(Builder::XmlMarkup.new)
     end
