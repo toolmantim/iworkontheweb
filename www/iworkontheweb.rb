@@ -24,7 +24,7 @@ module Iworkontheweb
       },
       "production" => {
         "adapter" => "mysql",
-        "database" => "iworkontheweb_production",
+        "database" => "iworkontheweb",
         "username" => "root"
       }
     }[ENV["CAMPING_ENV"] || "development"])
