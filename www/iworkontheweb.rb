@@ -260,8 +260,7 @@ module Iworkontheweb::Views
       p {
         %(
           Beautiful <a href="http://flickr.com/photos/tags/iworkontheweb/">meme</a> started by <a href="http://scenariogirl.com/">Lisa Herrod</a>,
-          site idea by <a href="http://lachstock.com.au/">Lachlan Hardy</a> and
-          site implementation by <a href="http://toolmantim.com">Tim Lucas</a>.
+          site by <a href="http://lachstock.com.au/">Lachlan Hardy</a> and <a href="http://toolmantim.com">Tim Lucas</a>.
         )
       }
     end
