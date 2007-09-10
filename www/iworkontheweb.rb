@@ -175,11 +175,13 @@ module Iworkontheweb::Controllers
     end
   end
   class About < R '/about'
-    @body_class = 'about'
-    @person_count = Person.count
-    @latest = Person.recent
-    @page_title = "About iworkontheweb.com"
-    render :about
+    def get
+      @body_class = 'about'
+      @person_count = Person.count
+      @latest = Person.recent
+      @page_title = "About iworkontheweb.com"
+      render :about      
+    end
   end
 end
 
