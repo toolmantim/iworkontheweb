@@ -381,7 +381,7 @@ module Iworkontheweb::Views
       h2 "Add your profile"
       p { %(Firstly, you&rsquo;ll need to upload your iworkontheweb profile onto flickr.) }
       p { %(Secondly, tag your flickr photo with the machine tag <em>"iworkontheweb:name=My&nbsp;Name"</em> (don't forget to include the double quotes). See the machine tags on <a href="http://flickr.com/photos/lisaherrod/1273023044/">Lisa&rsquo;s flickr photo</a> for an example.) }
-      p { %(Thirdly, wait around ten minutes and find yourself on <a href="http://iworkontheweb.com">iworkontheweb.com</a>.) }
+      p { %(Thirdly, wait around ten minutes (or a bit more if Flickr is feeling tired) and find yourself magically added to <a href="http://iworkontheweb.com">iworkontheweb.com</a>.) }
     end
   end
   
