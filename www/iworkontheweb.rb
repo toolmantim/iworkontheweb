@@ -159,13 +159,13 @@ module Iworkontheweb::Controllers
       render :index
     end
   end
-  class Info < R '/info/(\d+)', '/info/(\w+)/(\d+)', '/info', '/info/(\d+)/(\d+)/(\d+)/([\w-]+)'
-    def get(*args)
-      div do
-        code args.inspect; br; br
-        code @env.inspect; br
-        code "Link: #{R(Info, 1, 2)}"
-      end
+  class AddYourProfile < R '/add-your-profile'
+    def get
+      @body_class = 'add'
+      @person_count = Person.count
+      @latest = Person.recent
+      @page_title = "Add your profile to iworkontheweb.com"
+      render :add_your_profile
     end
   end
   class Style < R '/iworkontheweb.css'
@@ -187,7 +187,7 @@ module Iworkontheweb::Controllers
           clear: both;
         }
 
-        .profile {
+        .profile, .add-your-profile {
           float: right;
           text-align: left;
         }
@@ -290,7 +290,7 @@ module Iworkontheweb::Controllers
           margin-top: 10px;  
         }
 
-        .page, .all-profiles .profiles {
+        .page, .all-profiles .profiles, .add-your-profile {
           width: 500px;
           float: right;
         }
@@ -337,19 +337,20 @@ module Iworkontheweb::Views
             for person in @latest
               li { a person.name, :href => R(Show, person.to_param) }
             end
-            _nav_links
+            li(:class => "view-all") { a "View all #{@person_count} people", :href => R(Index) }
+            li(:class => "where-it-all-started") { a "Where it all started", :href => R(Show, "1-lisa-herrod") }
+            li(:class => "add-your-profile-link") { a "Add your profile", :href => R(AddYourProfile) }
           end
         end
         div(:class => "clear-both") { "" }
         
         # Reinvigorate
         script(:type => "text/javascript", :src => "http://include.reinvigorate.net/re_.js") { "" }
-        script(:type => "text/javascript") { "re_(\"dyf1j-xl76p89197\");" }
+        script(:type => "text/javascript") { %(re_("dyf1j-xl76p89197");) }
         
         # Google Analytics
         script(:type => "text/javascript", :src => "http://www.google-analytics.com/urchin.js") { "" }
-        script(:type => "text/javascript") { "_uacct = \"UA-196032-2\"; urchinTracker();" }
-        
+        script(:type => "text/javascript") { %(_uacct = "UA-196032-2"; urchinTracker();) }        
       end
     end
   end
@@ -375,6 +376,15 @@ module Iworkontheweb::Views
     _person(@person)
   end
   
+  def add_your_profile
+    div :class => "add-your-profile" do
+      h2 "Add your profile"
+      p { %(Firstly, you&rsquo;ll need to upload your iworkontheweb profile onto flickr.) }
+      p { %(Secondly, tag your flickr photo with the machine tag <em>"iworkontheweb:name=My&nbsp;Name"</em> (don't forget to include the double quotes). See the machine tags on <a href="http://flickr.com/photos/lisaherrod/1273023044/">Lisa&rsquo;s flickr photo</a> for an example.) }
+      p { %(Thirdly, wait around ten minutes and find yourself on <a href="http://iworkontheweb.com">iworkontheweb.com</a>.) }
+    end
+  end
+  
   def not_found
     div.page { p "Page not found." }
   end
@@ -391,11 +401,6 @@ module Iworkontheweb::Views
         p { span.source { "Source: " + a(person.source_flickr_photo_url, :href => person.source_flickr_photo_url) } }
       end
     end    
-  end
-
-  def _nav_links
-    li(:class => "view-all") { a "View all #{@person_count} people", :href => R(Index) }
-    li(:class => "where-it-all-started") { a "Where it all started", :href => R(Show, "1-lisa-herrod") }
   end
 end
 
