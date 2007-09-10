@@ -176,7 +176,6 @@ module Iworkontheweb::Controllers
   end
   class About < R '/about'
     def get
-      @body_class = 'about'
       @person_count = Person.count
       @latest = Person.recent
       @page_title = "About iworkontheweb.com"
@@ -207,6 +206,7 @@ module Iworkontheweb::Views
             li(:class => "where-it-all-started") { a "Where it all started", :href => "http://flickr.com/photos/lisaherrod/1273023044/" }
 #            li(:class => "where-it-all-started") { a "Where it all started", :href => R(Show, "1-lisa-herrod") }
             li(:class => "add-your-profile-link") { a "Add your profile", :href => R(AddYourProfile) }
+            li(:class => "about-link") { a "About", :href => R(About) }
           end
         end
         div(:class => "clear-both") { "" }
@@ -255,7 +255,7 @@ module Iworkontheweb::Views
   def about
     div.about do
       h2 "About"
-      p { %(<a href="">Meme</a> started by <a href="http://scenariogirl.com/">Lisa Herrod</a>) }
+      p { %(Beautiful <a href="http://flickr.com/photos/tags/iworkontheweb/">meme</a> started by <a href="http://scenariogirl.com/">Lisa Herrod</a>) }
       p { %(Site idea by <a href="http://lachstock.com.au/">Lachlan Hardy</a>) }
       p { %(Site implementation by <a href="http://toolmantim.com">Tim Lucas</a>) }
     end

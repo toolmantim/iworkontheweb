@@ -13,7 +13,7 @@ body {
   clear: both;
 }
 
-.profile, .add-your-profile {
+.profile, .add-your-profile, .about {
   float: right;
   text-align: left;
 }
@@ -116,7 +116,7 @@ h1 a:hover {
   margin-top: 10px;  
 }
 
-.page, .all-profiles .profiles, .add-your-profile {
+.page, .all-profiles .profiles, .add-your-profile, .about {
   width: 500px;
   float: right;
 }
