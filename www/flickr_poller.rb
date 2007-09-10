@@ -1,4 +1,4 @@
-require 'iworkontheweb'
+require File.join(File.dirname(__FILE__), 'iworkontheweb')
 
 Iworkontheweb.establish_db_connection
 
