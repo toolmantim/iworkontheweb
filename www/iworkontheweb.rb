@@ -174,6 +174,13 @@ module Iworkontheweb::Controllers
       @headers['X-Sendfile'] = File.join(File.expand_path(File.dirname(__FILE__)), "iworkontheweb.css")
     end
   end
+  class About < R '/about'
+    @body_class = 'about'
+    @person_count = Person.count
+    @latest = Person.recent
+    @page_title = "About iworkontheweb.com"
+    render :about
+  end
 end
 
 module Iworkontheweb::Views
@@ -240,6 +247,15 @@ module Iworkontheweb::Views
       p { %(Firstly, you&rsquo;ll need to upload your iworkontheweb profile onto flickr.) }
       p { %(Secondly, tag your flickr photo with the machine tag <em>"iworkontheweb:name=My&nbsp;Name"</em> (don't forget to include the double quotes). See the machine tags on <a href="http://flickr.com/photos/lisaherrod/1273023044/">Lisa&rsquo;s flickr photo</a> for an example.) }
       p { %(Thirdly, wait around ten minutes (or a bit more if Flickr is feeling tired) and find yourself magically added to <a href="http://iworkontheweb.com">iworkontheweb.com</a>.) }
+    end
+  end
+  
+  def about
+    div.about do
+      h2 "About"
+      p { %(<a href="">Meme</a> started by <a href="http://scenariogirl.com/">Lisa Herrod</a>) }
+      p { %(Site idea by <a href="http://lachstock.com.au/">Lachlan Hardy</a>) }
+      p { %(Site implementation by <a href="http://toolmantim.com">Tim Lucas</a>) }
     end
   end
   
