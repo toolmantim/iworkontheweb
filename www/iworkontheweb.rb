@@ -25,9 +25,8 @@ module Iworkontheweb
         "database" => File.expand_path("~/.camping.db")
       },
       "production" => {
-        "adapter" => "mysql",
-        "database" => "iworkontheweb",
-        "username" => "root"
+        "adapter" => "sqlite3",
+        "database" => "/var/www/iworkontheweb/iworkontheweb.db"
       }
     }[ENV["CAMPING_ENV"] || "development"])
   end
