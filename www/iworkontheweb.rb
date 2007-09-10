@@ -338,7 +338,8 @@ module Iworkontheweb::Views
               li { a person.name, :href => R(Show, person.to_param) }
             end
             li(:class => "view-all") { a "View all #{@person_count} people", :href => R(Index) }
-            li(:class => "where-it-all-started") { a "Where it all started", :href => R(Show, "1-lisa-herrod") }
+            li(:class => "where-it-all-started") { a "Where it all started", :href => "http://flickr.com/photos/lisaherrod/1273023044/" }
+#            li(:class => "where-it-all-started") { a "Where it all started", :href => R(Show, "1-lisa-herrod") }
             li(:class => "add-your-profile-link") { a "Add your profile", :href => R(AddYourProfile) }
           end
         end
