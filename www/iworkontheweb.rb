@@ -323,7 +323,6 @@ module Iworkontheweb::Views
 end
 
 def Iworkontheweb.create
-  Camping::Models::Session.create_schema
   Iworkontheweb::Models.create_schema :assume => (Iworkontheweb::Models::Person.table_exists? ? 1.0 : 0.0)
   Iworkontheweb.create_fixtures unless Iworkontheweb::Models::Person.count > 0
 end
