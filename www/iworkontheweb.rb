@@ -196,7 +196,7 @@ module Iworkontheweb::Views
       head do
         title(@page_title || "I work on the web.")
         link :rel => 'stylesheet', :type => 'text/css', :href => '/iworkontheweb.css', :media => 'screen'
-        link :href => R(Atom), :rel => "alternate", :type => "application/atom+xml"
+#        link :href => "http://feeds.feedburner.com/IWorkOnTheWeb", :rel => "alternate", :type => "application/atom+xml"
       end
       body(:class => @body_class) do
         p(:class => "skip-to-navigation") { a "Skip to navigation", :href => "#navigation" }
