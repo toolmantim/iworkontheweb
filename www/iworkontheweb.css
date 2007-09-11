@@ -92,8 +92,15 @@ h1 a:hover {
   margin-top: 15px;
 }
 
-.profile a img {
+a.profile-image img, a.profile-image:hover img {
   border: 1px solid #000;
+  margin: 0;
+}
+a.profile-image, a-profile-image:hover {
+  text-decoration: none;
+  padding: 0;
+  border: 0;
+  background-color: #000;
 }
 
 .navigation h2 {

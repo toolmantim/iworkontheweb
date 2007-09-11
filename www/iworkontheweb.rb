@@ -310,7 +310,7 @@ module Iworkontheweb::Views
   # partials
   def _person(person)
     div :class => 'profile', :style => "width:#{person.image_width}px" do
-      a :href => person.source_flickr_photo_url do
+      a :href => person.source_flickr_photo_url, :class => "profile-image" do
         img :src => person.image_source_url, :alt => person.name, :width => person.image_width.to_s, :height => person.image_height.to_s
       end
       h2 { a person.name, :href => R(Show, person.to_param) }

@@ -9,6 +9,7 @@ class Iworkontheweb::Flickr
   API_KEY = "11f5a2f3ae888c99f2da5a8c70411584"
   API_URL_BASE = "http://api.flickr.com/services/rest"
   LIMIT = 500
+  LISAS_USER_ID = "78453006@N00"
 
   class Photo < Struct.new(:id, :farm, :server, :secret, :description, :posted_timestamp, :last_update_timestamp, :photo_page_url, :tags, :machine_tags)
 
@@ -32,6 +33,8 @@ class Iworkontheweb::Flickr
     
     def self.iwotw_name_tagged_photos
       REXML::Document.new(open(get_tagged_photos_url)).get_elements("//photo").map do |e|
+        from_photo_info REXML::Document.new(open(get_info_url(e.attributes["id"]))).get_elements("//photo").first
+      end + REXML::Document.new(open(get_lisas_profile_photo_dammit_url)).get_elements("//photo").map do |e|
         from_photo_info REXML::Document.new(open(get_info_url(e.attributes["id"]))).get_elements("//photo").first
       end
     end
@@ -70,6 +73,9 @@ class Iworkontheweb::Flickr
       end
       def self.get_tagged_photos_url
         "#{API_URL_BASE}/?method=flickr.photos.search&api_key=#{API_KEY}&per_page=#{LIMIT}&machine_tags=iworkontheweb:name=&sort=date-posted-asc"
+      end
+      def self.get_lisas_profile_photo_dammit_url
+        get_tagged_photos_url + "&user_id=#{LISAS_USER_ID}"
       end
   end
 
