@@ -257,6 +257,8 @@ module Iworkontheweb::Views
       p { %(Thirdly, wait around five minutes (or a bit more if Flickr is feeling tired) and find yourself magically added to <a href="http://iworkontheweb.com">iworkontheweb.com</a>.) }
       h3 "Want to remove your profile?"
       p { %(Simply remove the <em>"iworkontheweb:name="</em> machine tag from your photograph, and in five or so minutes it will have been removed.) }
+      h3 "Not showing up?"
+      p { %(There seems to be a bug with the flickr API search as some photos aren't showing up. I&rsquo;ve been in touch with them so hopefully it&rsquo;ll be resolved shortly.) }      
     end
   end
   
