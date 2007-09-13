@@ -8,7 +8,7 @@ require 'active_record'
 
 Camping.goes :Iworkontheweb
 
-IWOTW_LOGGER = ActiveRecord::Base.logger = Logger.new(STDOUT)
+#IWOTW_LOGGER = ActiveRecord::Base.logger = Logger.new(STDOUT)
 
 module Iworkontheweb  
   # Method for other scripts to create a database connection. For example:
