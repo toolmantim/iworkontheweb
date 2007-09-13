@@ -121,7 +121,7 @@ class Iworkontheweb::Flickr
   
   def self.update_people_from_flickr_photos(flickr_photos)
     IWOTW_LOGGER.debug "Updating #{flickr_photos.length} existing people"
-    photo_attributes = flickr_photos.parallel_map(MAX_THREADS) do |photo|
+    flickr_photos.parallel_map(MAX_THREADS) do |photo|
       [photo, photo.to_person_attributes]
     end.each do |(photo, person_attributes)|
       Iworkontheweb::Models::Person.find_by_flickr_photo_id(photo.id).update_attributes_if_changed!(person_attributes)
