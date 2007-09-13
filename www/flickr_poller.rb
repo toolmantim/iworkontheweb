@@ -1,4 +1,5 @@
 require File.join(File.dirname(__FILE__), 'iworkontheweb')
+require File.join(File.dirname(__FILE__), 'parallel')
 
 Iworkontheweb.establish_db_connection
 
@@ -10,6 +11,7 @@ class Iworkontheweb::Flickr
   API_URL_BASE = "http://api.flickr.com/services/rest"
   LIMIT = 500
   LISAS_USER_ID = "78453006@N00"
+  MAX_THREADS = 10
 
   class Photo < Struct.new(:id, :farm, :server, :secret, :description, :posted_timestamp, :last_update_timestamp, :photo_page_url, :tags, :machine_tags)
 
@@ -32,15 +34,15 @@ class Iworkontheweb::Flickr
     end
     
     def self.iwotw_name_tagged_photos
-      REXML::Document.new(open(get_tagged_photos_url)).get_elements("//photo").map do |e|
-        from_photo_info REXML::Document.new(open(get_info_url(e.attributes["id"]))).get_elements("//photo").first
-      end + REXML::Document.new(open(get_lisas_profile_photo_dammit_url)).get_elements("//photo").map do |e|
-        from_photo_info REXML::Document.new(open(get_info_url(e.attributes["id"]))).get_elements("//photo").first
+      flickr_api_result(get_tagged_photos_url).get_elements("//photo").parallel_map(MAX_THREADS) do |e|
+        from_photo_info flickr_api_result(get_info_url(e.attributes["id"])).get_elements("//photo").first
+      end + flickr_api_result(get_lisas_profile_photo_dammit_url).get_elements("//photo").parallel_map(MAX_THREADS) do |e|
+        from_photo_info flickr_api_result(get_info_url(e.attributes["id"])).get_elements("//photo").first
       end
     end
     
     def sizes
-      @sizes ||= REXML::Document.new(open(get_sizes_url)).get_elements("//size").map do |e|
+      @sizes ||= self.class.flickr_api_result(get_sizes_url).get_elements("//size").map do |e|
         Size.new(*%w(label width height source url).map {|a| e.attributes[a]})
       end
     end
@@ -63,6 +65,9 @@ class Iworkontheweb::Flickr
     def name_tag
       machine_tags.find {|tag| tag.namespace == "iworkontheweb" && tag.predicate == "name"}
     end
+    def to_s
+      "#{id}: #{name_tag.value}"
+    end
         
     protected
       def get_sizes_url
@@ -77,6 +82,16 @@ class Iworkontheweb::Flickr
       def self.get_lisas_profile_photo_dammit_url
         get_tagged_photos_url + "&user_id=#{LISAS_USER_ID}"
       end
+      def self.flickr_api_result(url)
+        response = open(url).read
+        IWOTW_LOGGER.debug "Fetching #{url} returned:\n#{response}"
+        parsed_response = REXML::Document.new(response)
+        if (stat = parsed_response.get_elements("//rsp").first.attributes["stat"]) != "ok"
+          IWOTW_LOGGER.error %(Flickr returned <rsp stat="#{stat}">:\n #{parsed_response.to_s})
+          raise %(Flickr returned <rsp stat="#{stat}">)
+        end
+        parsed_response
+      end
   end
 
   def self.update!
@@ -85,34 +100,41 @@ class Iworkontheweb::Flickr
     
     flickr_photos = Photo.iwotw_name_tagged_photos
     IWOTW_LOGGER.info "#{flickr_photos.length} tagged Flickr Photos"
+
+    if flickr_photos.empty?
+      IWOTW_LOGGER.error "Flickr returned no photos!"
+      return
+    end
     
     deleted_people = people.find_all {|person| !flickr_photos.any? {|photo| photo.id == person.flickr_photo_id }}
-    IWOTW_LOGGER.info "#{deleted_people.length} people no longer on Flickr"
+    IWOTW_LOGGER.info "#{deleted_people.length} people no longer on Flickr (#{deleted_people.map(&:name).join(', ')})"
     delete_people_no_longer_with_photos(deleted_people) unless deleted_people.empty?
     
     existing_photos = flickr_photos.find_all {|photo| people.any? {|person| person.flickr_photo_id == photo.id }}
-    IWOTW_LOGGER.info "#{existing_photos.length} photos on Flickr already in DB"    
+    IWOTW_LOGGER.info "#{existing_photos.length} photos on Flickr already in DB (#{existing_photos.map(&:to_s).join(', ')})"
     update_people_from_flickr_photos(existing_photos) unless existing_photos.empty?
 
     new_photos = flickr_photos.find_all {|photo| !people.any? {|person| person.flickr_photo_id == photo.id}}
-    IWOTW_LOGGER.info "#{new_photos.length} new photos on Flickr"
+    IWOTW_LOGGER.info "#{new_photos.length} new photos on Flickr (#{new_photos.map(&:to_s).join(', ')})"
     add_people_from_flickr_photos(new_photos) unless new_photos.empty?
   end
   
   def self.update_people_from_flickr_photos(flickr_photos)
     IWOTW_LOGGER.debug "Updating #{flickr_photos.length} existing people"
-    flickr_photos.each do |photo|
-      Iworkontheweb::Models::Person.find_by_flickr_photo_id(photo.id).update_attributes_if_changed!(photo.to_person_attributes)
+    photo_attributes = flickr_photos.parallel_map(MAX_THREADS) do |photo|
+      [photo, photo.to_person_attributes]
+    end.each do |(photo, person_attributes)|
+      Iworkontheweb::Models::Person.find_by_flickr_photo_id(photo.id).update_attributes_if_changed!(person_attributes)
     end
   end
   def self.add_people_from_flickr_photos(new_flickr_photos)
-    IWOTW_LOGGER.debug "Adding #{new_flickr_photos.length} people from new flickr photos"
+    IWOTW_LOGGER.debug "Adding #{new_flickr_photos.length} people from new flickr photos (#{new_flickr_photos.map(&:id).join(',')})"
     new_flickr_photos.each do |photo|
       Iworkontheweb::Models::Person.new(photo.to_person_attributes).save!
     end
   end
   def self.delete_people_no_longer_with_photos(people)
-    IWOTW_LOGGER.debug "Deleting #{people.length} people no longer with flickr photos"
+    IWOTW_LOGGER.debug "Deleting #{people.length} people no longer with flickr photos (#{people.map(&:name).join(',')})"
     people.each(&:destroy)
   end
 end
