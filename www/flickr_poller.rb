@@ -10,7 +10,6 @@ class Iworkontheweb::Flickr
   API_KEY = "11f5a2f3ae888c99f2da5a8c70411584"
   API_URL_BASE = "http://api.flickr.com/services/rest"
   LIMIT = 500
-  LISAS_USER_ID = "78453006@N00"
   MAX_THREADS = 10
 
   class Photo < Struct.new(:id, :farm, :server, :secret, :description, :posted_timestamp, :last_update_timestamp, :photo_page_url, :tags, :machine_tags)
@@ -35,8 +34,6 @@ class Iworkontheweb::Flickr
     
     def self.iwotw_name_tagged_photos
       flickr_api_result(get_tagged_photos_url).get_elements("//photo").parallel_map(MAX_THREADS) do |e|
-        from_photo_info flickr_api_result(get_info_url(e.attributes["id"])).get_elements("//photo").first
-      end + flickr_api_result(get_lisas_profile_photo_dammit_url).get_elements("//photo").parallel_map(MAX_THREADS) do |e|
         from_photo_info flickr_api_result(get_info_url(e.attributes["id"])).get_elements("//photo").first
       end
     end
@@ -95,7 +92,7 @@ class Iworkontheweb::Flickr
   end
 
   def self.update!
-    people = Iworkontheweb::Models::Person.find(:all, :select => 'id, flickr_photo_id')
+    people = Iworkontheweb::Models::Person.find(:all, :select => 'id, name, flickr_photo_id')
     IWOTW_LOGGER.info "#{people.length} existing people in the DB"
     
     flickr_photos = Photo.iwotw_name_tagged_photos

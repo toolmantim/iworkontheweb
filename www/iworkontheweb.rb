@@ -255,10 +255,10 @@ module Iworkontheweb::Views
       p { %(Firstly, you&rsquo;ll need to upload your iworkontheweb profile onto flickr.) }
       p { %(Secondly, tag your flickr photo with the machine tag <em>"iworkontheweb:name=My&nbsp;Name"</em> (don't forget to include the double quotes). See the machine tags on <a href="http://flickr.com/photos/lisaherrod/1273023044/">Lisa&rsquo;s flickr photo</a> for an example.) }
       p { %(Thirdly, wait around five minutes (or a bit more if Flickr is feeling tired) and find yourself magically added to <a href="http://iworkontheweb.com">iworkontheweb.com</a>.) }
+      h3 "Not showing up?"
+      p { %(Make sure your <a href="http://flickr.com/account/prefs/optout/?from=privacy">Hiding from Search</a> Flickr account preferences <strong>does not</strong> hide your photos from 3rd party sites, and that <a href="http://flickr.com/account/">your account</a> has been reviewed as <strong>safe</strong> (top paragraph of your account page).) }
       h3 "Want to remove your profile?"
       p { %(Simply remove the <em>"iworkontheweb:name="</em> machine tag from your photograph, and in five or so minutes it will have been removed.) }
-      h3 "Not showing up?"
-      p { %(There seems to be a bug with the flickr API search as some photos aren't showing up. They&rsquo;ve acknowledged the bug so hopefully it&rsquo;ll be resolved shortly.) }
     end
   end
   
