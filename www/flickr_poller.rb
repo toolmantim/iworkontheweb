@@ -92,7 +92,7 @@ class Iworkontheweb::Flickr
   end
 
   def self.update!
-    people = Iworkontheweb::Models::Person.find(:all, :select => 'id, name, flickr_photo_id')
+    people = Iworkontheweb::Models::Person.find(:all, :select => 'id, name, flickr_photo_id, deleted_at', :conditions => 'deleted_at IS NULL')
     IWOTW_LOGGER.info "#{people.length} existing people in the DB"
     
     flickr_photos = Photo.iwotw_name_tagged_photos
@@ -127,12 +127,18 @@ class Iworkontheweb::Flickr
   def self.add_people_from_flickr_photos(new_flickr_photos)
     IWOTW_LOGGER.debug "Adding #{new_flickr_photos.length} people from new flickr photos (#{new_flickr_photos.map(&:id).join(',')})"
     new_flickr_photos.each do |photo|
-      Iworkontheweb::Models::Person.new(photo.to_person_attributes).save!
+      previously_deleted_peep = Iworkontheweb::Models::Person.find_by_flickr_photo_id(photo.id)
+      if previously_deleted_peep
+        previously_deleted_peep.update_attributes_if_changed!(photo.to_person_attributes)
+        previously_deleted_peep.update_attribute(:deleted_at, nil)
+      else
+        Iworkontheweb::Models::Person.new(photo.to_person_attributes).save!
+      end
     end
   end
   def self.delete_people_no_longer_with_photos(people)
     IWOTW_LOGGER.debug "Deleting #{people.length} people no longer with flickr photos (#{people.map(&:name).join(',')})"
-    people.each(&:destroy)
+    people.each {|p| p.update_attribute(:deleted_at, Time.now) }
   end
 end
 

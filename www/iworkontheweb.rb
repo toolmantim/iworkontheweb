@@ -34,13 +34,16 @@ module Iworkontheweb::Models
   Base.default_timezone = :utc
   class Person < Base
     def self.latest
-      find(:first, :order => 'created_at DESC')
+      find(:first, :order => 'created_at DESC', :conditions => 'deleted_at IS NULL')
     end
     def self.recent
-      find(:all, :order => 'created_at DESC', :limit => 10, :select => 'id, name')
+      find(:all, :order => 'created_at DESC', :limit => 10, :select => 'id, name', :conditions => 'deleted_at IS NULL')
     end
     def self.all
-      find(:all, :order => 'created_at ASC', :select => 'id, name')
+      find(:all, :order => 'created_at ASC', :select => 'id, name', :conditions => 'deleted_at IS NULL')
+    end
+    def self.find_without_deleted(id)
+      find(:first, :conditions => ['id = ? AND deleted_at IS NULL', id.to_i]) || raise(ActiveRecord::RecordNotFound)
     end
     def to_param
       "#{self.id}-#{self.name.downcase.gsub(' ','-').gsub(/[^a-z0-9-]/,'')}"
@@ -121,6 +124,22 @@ module Iworkontheweb::Models
       add_column :iworkontheweb_people, :via_other,               :string
     end
   end
+  class AddDeletedAtToPeople < V 7.0
+    def self.up
+      add_column :iworkontheweb_people, :deleted_at, :datetime
+    end
+    def self.down
+      remove_column :iworkontheweb_people, :deleted_at
+    end
+  end
+  class DefaultNilForDeletedAtToPeople < V 8.0
+    def self.up
+      remove_column :iworkontheweb_people, :deleted_at
+      add_column :iworkontheweb_people, :deleted_at, :datetime, :default => nil
+    end
+    def self.down
+    end
+  end
 end
 
 module Iworkontheweb::Controllers
@@ -138,7 +157,7 @@ module Iworkontheweb::Controllers
       @body_class = "show-profile"
       @person_count = Person.count
       @latest = Person.recent
-      @person = Person.find(id)
+      @person = Person.find_without_deleted(id)
       @page_title = "#{@person.name} - I work on the web."
       render :show
     rescue ActiveRecord::RecordNotFound
@@ -183,7 +202,7 @@ module Iworkontheweb::Controllers
   class Atom < R '/profiles.atom'
     def get
       @headers["Content-Type"] = "application/atom+xml"
-      @people = Person.find(:all)
+      @people = Person.recent
       _atom(Builder::XmlMarkup.new)
     end
   end
