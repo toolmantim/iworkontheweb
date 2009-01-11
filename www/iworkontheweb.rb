@@ -1,7 +1,5 @@
 #!/usr/bin/env ruby
 
-# iwotw_deploy LK123Azz__as
-
 require 'rubygems'
 
 gem 'camping', '~>1'
