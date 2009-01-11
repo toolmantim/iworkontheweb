@@ -3,8 +3,11 @@
 # iwotw_deploy LK123Azz__as
 
 require 'rubygems'
+
 gem 'camping', '~>1'
 require 'camping'
+
+gem 'activerecord', '~>2.1'
 require 'active_record'
 
 Camping.goes :Iworkontheweb
