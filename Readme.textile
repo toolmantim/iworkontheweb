@@ -1,0 +1,5 @@
+h1. "iworkontheweb.com":http://iworkontheweb.com/
+
+h2. License
+
+MIT - see LICENSE for details.
