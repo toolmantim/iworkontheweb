@@ -1,0 +1,35 @@
+!!! Strict
+%html
+  %head
+    %title= @page_title || "I work on the web."
+    %link{:rel => 'stylesheet', :type => 'text/css', :href => '/iworkontheweb.css', :media => 'screen'}/
+
+  %body{:class => @body_class}
+    %p{:class => "skip-to-navigation"}
+      %a{:href => "#navigation"} Skip to navigation
+    %h1.header
+      %a{:href => "/"} I work on the web.
+    
+    = yield
+    
+    #navigation.navigation
+      %h2 Most recent
+      %ul
+        - for person in @latest
+          %li
+            %a{:href => person_path(person)}&= person.name
+        
+        %li.view-all
+          %a{:href => "/profiles"}== View all #{@person_count} people
+        %li.add-your-profile-link
+          %a{:href => "/add-your-profile"} Add your profile
+        %li.about-link
+          %a{:href => "/about"} About
+
+    %div.clear-both
+    
+    %script{:type => "text/javascript", :src => "http://include.reinvigorate.net/re_.js"}
+    %script{:type => "text/javascript"} re_("dyf1j-xl76p89197");
+    
+    %script{:type => "text/javascript", :src => "http://www.google-analytics.com/urchin.js"}
+    %script{:type => "text/javascript"} _uacct = "UA-196032-2"; urchinTracker();

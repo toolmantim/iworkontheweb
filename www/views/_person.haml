@@ -1,0 +1,11 @@
+.profile{:style => "width:#{person.image_width}px"}
+  %a.profile-image{:href => person.source_flickr_photo_url}
+    %img{:src => person.image_source_url, :alt => person.name, :width => person.image_width.to_s, :height => person.image_height.to_s}/
+  %h2
+    %a{:href => person_path(person)}&= person.name
+  .copy
+    = person.formatted_story
+    %p
+      %span.source
+        Source: 
+        %a{:href => person.source_flickr_photo_url}= person.source_flickr_photo_url
