@@ -2,10 +2,10 @@
 
 require 'rubygems'
 
-gem 'activerecord', '=2.1.2'
+gem 'activerecord', '= 2.1.2'
 require 'active_record'
 
-gem 'camping', '~>1'
+gem 'camping'
 require 'camping'
 
 Camping.goes :Iworkontheweb
