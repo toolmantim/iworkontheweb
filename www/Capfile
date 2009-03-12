@@ -1,1 +1,24 @@
-# TODO
+load 'deploy'
+
+set :use_sudo, false
+
+set :scm, :git
+set :scm_verbose, true
+set :repository,  "git@github.com:toolmantim/iworkontheweb.git"
+set :branch, "master"
+set :deploy_via, :remote_cache
+
+set :deploy_to, "/var/www/iworkontheweb/app"
+
+role :app, "iworkontheweb.com"
+role :web, "iworkontheweb.com"
+role :db,  "iworkontheweb.com", :primary => true
+
+ssh_options[:keys] = %w(~/.ssh/id_rsa ~/.ssh/id_dsa)
+ssh_options[:forward_agent] = true
+
+namespace :deploy do
+  task :restart do
+    run "touch #{current_path}/tmp/restart.txt"
+  end
+end
