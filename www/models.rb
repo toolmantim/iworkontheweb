@@ -1,22 +1,22 @@
+require 'rubygems'
 require 'activerecord'
 
 __DIR__ = File.dirname(__FILE__)
 
-ActiveRecord::Base.logger = IWOTW_LOGGER
+ActiveRecord::Base.logger = Logger.new(STDOUT)
 ActiveRecord::Base.default_timezone = :utc
 ActiveRecord::Base.establish_connection(
   {
-    :development => {
+    "development" => {
       "adapter" => "sqlite3",
       "database" => "#{__DIR__}/iworkontheweb.db"
     },
-    :production => {
+    "production" => {
       "adapter" => "sqlite3",
       "database" => "/var/www/iworkontheweb/iworkontheweb.db"
     }
-  }[Sinatra::Application.environment]
+  }[ENV["IWOTW_ENV"] || "development"]
 )
-
 ActiveRecord::Migrator.migrate("#{__DIR__}/migrations")
 
 class Person < ActiveRecord::Base

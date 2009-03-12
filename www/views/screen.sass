@@ -22,42 +22,10 @@ p
   :margin 1em 0
 
 
-ul
-  :margin 0
-  :padding 0
-  :list-style none
-
-  &.group-1
-    :margin-left 10%
-    :width 30%
-    :float left
-    :text-align left
-
-    li
-      :margin 0.75em 0
-
-  &.group-2
-    :width 30%
-    :float left
-    :text-align left
-
-    li
-      :margin 0.75em 0
-
-  &.group-3
-    :width 30%
-    :float left
-    :text-align left
-
-    li
-      :margin 0.75em 0
-
-
 li
   :margin 0
   :padding 0
   :list-style none
-
 
 h1
   :margin 0
@@ -71,15 +39,7 @@ h1
     :color #000
     :text-decoration none
 
-    &:visited
-      :background-color #fff
-      :color #000
-      :text-decoration none
-
     &:hover
-      :background-color #fff
-      :color #000
-      :text-decoration none
       :text-decoration underline
 
 
@@ -88,9 +48,76 @@ h2
   :padding 0
   :font-weight normal
 
+a
+  :color #333
+
+  &:hover
+    :text-decoration none
+    :background-color #000
+    :color #fff
+
+  &:visited
+    :color #666
+
+  &.profile-image
+    :text-decoration none
+    :padding 0
+    :border 0
+    :background-color #fff
+
+    img, &:hover img
+      :border 1px solid #000
+      :margin 0
+
+h3
+  :font-weight normal
+
+.skip-to-navigation
+  :font-size 12px
+
+  a
+    :color #000
+
+    &:visited
+      :color #000
+
+    &:hover
+      :color #fff
+
 
 .clear-both
   :clear both
+
+.profiles
+  ul
+    :margin 0
+    :padding 0
+    :list-style none
+
+    &.group-1
+      :margin-left 10%
+      :width 30%
+      :float left
+      :text-align left
+
+      li
+        :margin 0.75em 0
+
+    &.group-2
+      :width 30%
+      :float left
+      :text-align left
+
+      li
+        :margin 0.75em 0
+
+    &.group-3
+      :width 30%
+      :float left
+      :text-align left
+
+      li
+        :margin 0.75em 0
 
 
 .profile
@@ -131,7 +158,6 @@ h2
   :width 500px
   :float right
 
-
 .navigation
   :float right
   :margin-right 20px
@@ -152,61 +178,19 @@ h2
   :display inline
   :margin-right 0.5em
 
-
-.skip-to-navigation
-  :font-size 12px
-
-  a
-    :color #000
-
-    &:visited
-      :color #000
-
-    &:hover
-      :color #fff
-
-
-a
-  :color #333
-
-  &:hover
-    :text-decoration none
-    :background-color #000
-    :color #fff
-
-  &:visited
-    :color #666
-
-  &.profile-image
-    :text-decoration none
-    :padding 0
-    :border 0
-    :background-color #fff
-
-    img, &:hover img
-      :border 1px solid #000
-      :margin 0
-
-
-h3
-  :font-weight normal
-
-
 a-profile-image:hover
   :text-decoration none
   :padding 0
   :border 0
   :background-color #fff
 
-
-.all-profiles .profiles
+.profiles
   :width 500px
   :float right
 
   h2
     :margin 2em 0 0.5em 10%
     :text-align left
-
 
 .page
   :width 500px

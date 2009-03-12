@@ -1,11 +1,14 @@
 __DIR__ = File.dirname(__FILE__)
 
+ENV['IWOTW_ENV'] ||= "development"
 require "#{__DIR__}/models"
 
 require "#{__DIR__}/parallel"
 
 require 'rexml/document'
 require 'open-uri'
+
+LOGGER = Logger.new(STDOUT)
 
 class FlickrPoller
   API_KEY = "11f5a2f3ae888c99f2da5a8c70411584"
@@ -82,10 +85,10 @@ class FlickrPoller
       end
       def self.flickr_api_result(url)
         response = open(url).read
-        IWOTW_LOGGER.debug "Fetching #{url} returned:\n#{response}"
+        LOGGER.debug "Fetching #{url} returned:\n#{response}"
         parsed_response = REXML::Document.new(response)
         if (stat = parsed_response.get_elements("//rsp").first.attributes["stat"]) != "ok"
-          IWOTW_LOGGER.error %(Flickr returned <rsp stat="#{stat}">:\n #{parsed_response.to_s})
+          LOGGER.error %(Flickr returned <rsp stat="#{stat}">:\n #{parsed_response.to_s})
           raise %(Flickr returned <rsp stat="#{stat}">)
         end
         parsed_response
@@ -94,31 +97,31 @@ class FlickrPoller
 
   def self.update!
     people = Person.find(:all, :select => 'id, name, flickr_photo_id, deleted_at', :conditions => 'deleted_at IS NULL')
-    IWOTW_LOGGER.info "#{people.length} existing people in the DB"
+    LOGGER.info "#{people.length} existing people in the DB"
   
     flickr_photos = Photo.iwotw_name_tagged_photos
-    IWOTW_LOGGER.info "#{flickr_photos.length} tagged Flickr Photos"
+    LOGGER.info "#{flickr_photos.length} tagged Flickr Photos"
 
     if flickr_photos.empty?
-      IWOTW_LOGGER.error "Flickr returned no photos!"
+      LOGGER.error "Flickr returned no photos!"
       return
     end
   
     deleted_people = people.find_all {|person| !flickr_photos.any? {|photo| photo.id == person.flickr_photo_id }}
-    IWOTW_LOGGER.info "#{deleted_people.length} people no longer on Flickr (#{deleted_people.map(&:name).join(', ')})"
+    LOGGER.info "#{deleted_people.length} people no longer on Flickr (#{deleted_people.map(&:name).join(', ')})"
     delete_people_no_longer_with_photos(deleted_people) unless deleted_people.empty?
   
     existing_photos = flickr_photos.find_all {|photo| people.any? {|person| person.flickr_photo_id == photo.id }}
-    IWOTW_LOGGER.info "#{existing_photos.length} photos on Flickr already in DB (#{existing_photos.map(&:to_s).join(', ')})"
+    LOGGER.info "#{existing_photos.length} photos on Flickr already in DB (#{existing_photos.map(&:to_s).join(', ')})"
     update_people_from_flickr_photos(existing_photos) unless existing_photos.empty?
 
     new_photos = flickr_photos.find_all {|photo| !people.any? {|person| person.flickr_photo_id == photo.id}}
-    IWOTW_LOGGER.info "#{new_photos.length} new photos on Flickr (#{new_photos.map(&:to_s).join(', ')})"
+    LOGGER.info "#{new_photos.length} new photos on Flickr (#{new_photos.map(&:to_s).join(', ')})"
     add_people_from_flickr_photos(new_photos) unless new_photos.empty?
   end
 
   def self.update_people_from_flickr_photos(flickr_photos)
-    IWOTW_LOGGER.debug "Updating #{flickr_photos.length} existing people"
+    LOGGER.debug "Updating #{flickr_photos.length} existing people"
     flickr_photos.parallel_map(MAX_THREADS) do |photo|
       [photo, photo.to_person_attributes]
     end.each do |(photo, person_attributes)|
@@ -126,7 +129,7 @@ class FlickrPoller
     end
   end
   def self.add_people_from_flickr_photos(new_flickr_photos)
-    IWOTW_LOGGER.debug "Adding #{new_flickr_photos.length} people from new flickr photos (#{new_flickr_photos.map(&:id).join(',')})"
+    LOGGER.debug "Adding #{new_flickr_photos.length} people from new flickr photos (#{new_flickr_photos.map(&:id).join(',')})"
     new_flickr_photos.each do |photo|
       previously_deleted_peep = Person.find_by_flickr_photo_id(photo.id)
       if previously_deleted_peep
@@ -138,7 +141,7 @@ class FlickrPoller
     end
   end
   def self.delete_people_no_longer_with_photos(people)
-    IWOTW_LOGGER.debug "Deleting #{people.length} people no longer with flickr photos (#{people.map(&:name).join(',')})"
+    LOGGER.debug "Deleting #{people.length} people no longer with flickr photos (#{people.map(&:name).join(',')})"
     people.each {|p| p.update_attribute(:deleted_at, Time.now) }
   end
 end

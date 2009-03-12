@@ -4,8 +4,7 @@ require 'sinatra'
 gem 'activerecord', '= 2.1.2'
 require 'activerecord'
 
-IWOTW_LOGGER = Logger.new(STDOUT)
-
+ENV['IWOTW_ENV'] ||= "development"
 require 'models'
 
 before do
