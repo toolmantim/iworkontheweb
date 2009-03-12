@@ -4,7 +4,7 @@ require 'sinatra'
 gem 'activerecord', '= 2.1.2'
 require 'activerecord'
 
-ENV['IWOTW_ENV'] ||= "development"
+ENV['IWOTW_ENV'] ||= Sinatra::Application.environment.to_s
 require 'models'
 
 before do
