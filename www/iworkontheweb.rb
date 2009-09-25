@@ -1,5 +1,7 @@
 require 'rubygems'
 require 'sinatra'
+require 'haml'
+require 'sass'
 
 gem 'activerecord', '= 2.1.2'
 require 'activerecord'
