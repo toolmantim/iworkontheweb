@@ -4,8 +4,8 @@
   - if @people.empty?
     %p No-one yet
   - else
-    %h2== All #{@people.length} people:
-    - @people.in_groups_of((@people.length.to_f / 3.0).ceil).each_with_index do |group, i|
+    %h2== All #{@person_count} people:
+    - @people.in_groups_of((@person_count.to_f / 3.0).ceil).each_with_index do |group, i|
       %ul{:class => "group-#{i+1}"}
         - for person in group
           %li

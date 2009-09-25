@@ -10,7 +10,7 @@ ENV['IWOTW_ENV'] ||= Sinatra::Application.environment.to_s
 require 'models'
 
 before do
-  @person_count = Person.count
+  @person_count = Person.all.length
   @latest = Person.recent
 end
 
